@@ -12,7 +12,11 @@ namespace RedeemCodeGen
         public const int TypeChar = 1;
         public const int TypeMix = 2;
 
-        public static string[] CreateCode(int count, int type, int length, string prefix, string suffix)
+        private static char[] sm_char_set{ get; set; }
+        private static char[] sm_mix_set{get; set;}
+        private static char[] sm_replacer{get; set;}
+
+        public static string[] CreateCode(int count, int type, int length, string prefix, string suffix, bool replace)
         {
             string[] codes = null;
             if (length > 16)
@@ -26,7 +30,7 @@ namespace RedeemCodeGen
                         codes = GenUniCharCode(count, length - 16);
                         break;
                     case TypeMix:
-                        codes = GenUniMixCode(count, length - 16);
+                        codes = GenUniMixCode(count, length - 16, replace);
                         break;
                 }
             }
@@ -171,17 +175,9 @@ namespace RedeemCodeGen
                 prefix += num.ToString("x2");
             }
 
-            char[] predo = new[]
+            for (int i = 0; i < sm_replacer.Length; i++)
             {
-                    'A','B','C','D','E','F',
-                    'G','H','I','J','K','L',
-                    'M','N','P','Q','R','S',
-                    'T','U','V','W','X','Y','Z'
-            };
-
-            for (int i = 0; i < predo.Length; i++)
-            {
-                prefix = prefix.Replace(i.ToString(), predo[i].ToString());
+                prefix = prefix.Replace(i.ToString(), sm_replacer[i].ToString());
             }
 
             for (int i = 0; i < codes.Length; i++)
@@ -193,15 +189,7 @@ namespace RedeemCodeGen
         }
         private static string[] GenCharCode(int count, int length)
         {
-            char[] predo = new[]
-            {
-                    'A','B','C','D','E','F',
-                    'G','H','I','J','K','L',
-                    'M','N','P','Q','R','S',
-                    'T','U','V','W','X','Y','Z'
-            };
-
-            if (Math.Pow(predo.Length, length) < count)
+            if (Math.Pow(sm_char_set.Length, length) < count)
             {
                 Console.WriteLine("生成数量大于位数，无法生成");
                 return null;
@@ -215,7 +203,7 @@ namespace RedeemCodeGen
             int idx = 0;
             while (idx < length)
             {
-                int f = random.Next(0, predo.Length);
+                int f = random.Next(0, sm_char_set.Length);
                 bitTimes[idx] = f;
                 total_count *= f > 0 ? f : 1;
                 idx++;
@@ -236,13 +224,13 @@ namespace RedeemCodeGen
                 char[] num = new char[coloum];
                 int x = 0, n = 0;
                 char tmp = ' ';
-                for (int m = predo.Length - 1; m > 0; m--)
+                for (int m = sm_char_set.Length - 1; m > 0; m--)
                 {
                     x = random.Next(0, m + 1);
-                    tmp = predo[m];
-                    predo[m] = predo[x];
-                    predo[x] = tmp;
-                    num[n] = predo[m];
+                    tmp = sm_char_set[m];
+                    sm_char_set[m] = sm_char_set[x];
+                    sm_char_set[x] = tmp;
+                    num[n] = sm_char_set[m];
                     n++;
                     if (n >= coloum)
                     {
@@ -263,7 +251,7 @@ namespace RedeemCodeGen
             return codes;
         }
 
-        private static string[] GenUniMixCode(int count, int length)
+        private static string[] GenUniMixCode(int count, int length, bool replace)
         {
             var codes = GenMixCode(count, length);
             if (codes == null)
@@ -279,14 +267,11 @@ namespace RedeemCodeGen
                 prefix += num.ToString("x2");
             }
 
-            char[] predo = new[]
+            if(replace)
             {
-                    'G','H','I','J','K','L',
-                    'M','N','P','Q','R','S',
-            };
-
-            var c = predo[DateTime.Now.Month - 1];
-            prefix = prefix.Replace("0", c.ToString());
+                var c = sm_replacer[DateTime.Now.Month - 1];
+                prefix = prefix.Replace("0", c.ToString());
+            }
 
             for (int i = 0; i < codes.Length; i++)
             {
@@ -298,15 +283,7 @@ namespace RedeemCodeGen
 
         private static string[] GenMixCode(int count, int length)
         {
-            char[] predo = new[]
-            {
-                    'A','B','C','D','E','F',
-                    'G','H','I','J','K','L',
-                    'M','N','P','Q','R','S',
-                    'T','U','V','W','X','Y','Z',
-                    '1','2','3','4','5','6','7','8','9','0'
-            };
-            if (Math.Pow(25, length) < count)
+            if (Math.Pow(sm_mix_set.Length, length) < count)
             {
                 Console.WriteLine("生成数量大于位数，无法生成");
                 return null;
@@ -319,7 +296,7 @@ namespace RedeemCodeGen
             int idx = 0;
             while (idx < length)
             {
-                int f = random.Next(0, predo.Length);
+                int f = random.Next(0, sm_mix_set.Length);
                 bitTimes[idx] = f;
                 total_count *= f > 0 ? f : 1;
                 idx++;
@@ -340,13 +317,13 @@ namespace RedeemCodeGen
                 char[] num = new char[coloum];
                 int x = 0, n = 0;
                 char tmp = ' ';
-                for (int m = predo.Length - 1; m > 0; m--)
+                for (int m = sm_mix_set.Length - 1; m > 0; m--)
                 {
                     x = random.Next(0, m + 1);
-                    tmp = predo[m];
-                    predo[m] = predo[x];
-                    predo[x] = tmp;
-                    num[n] = predo[m];
+                    tmp = sm_mix_set[m];
+                    sm_mix_set[m] = sm_mix_set[x];
+                    sm_mix_set[x] = tmp;
+                    num[n] = sm_mix_set[m];
                     n++;
                     if (n >= coloum)
                     {

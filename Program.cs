@@ -55,6 +55,12 @@ namespace RedeemCodeGen
                 get;
                 set;
             }
+
+            [Option('u', "upper", DefaultValue = true, HelpText = "是否转换成大写")]
+            public bool UpperCase{get; set;}
+
+            [Option('r', "replace", DefaultValue = false, HelpText = "Replace 0 with special text")]
+            public bool Replace{get; set;}
         }
         static void Main(string[] args)
         {
@@ -62,7 +68,7 @@ namespace RedeemCodeGen
 
             if(!result.Errors.Any())
             {
-                var codes = RedeemCodeGen.CreateCode(result.Value.count, result.Value.type, result.Value.length, result.Value.prefix, result.Value.suffix);
+                var codes = RedeemCodeGen.CreateCode(result.Value.count, result.Value.type, result.Value.length, result.Value.prefix, result.Value.suffix, result.Value.Replace);
 
                 var file = new FileStream(result.Value.path, FileMode.CreateNew);
                 var stream = new StreamWriter(file);
