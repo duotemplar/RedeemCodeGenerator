@@ -12,14 +12,14 @@ namespace RedeemCodeGen
         public const int TypeChar = 1;
         public const int TypeMix = 2;
 
-        private static char[] sm_char_set{ get; set; }
-        private static char[] sm_mix_set{get; set;}
-        private static char[] sm_replacer{get; set;}
+        public static char[] sm_char_set{ get; set; }
+        public static char[] sm_mix_set{get; set;}
+        public static char[] sm_replacer{get; set;}
 
-        public static string[] CreateCode(int count, int type, int length, string prefix, string suffix, bool replace)
+        public static string[] CreateCode(int count, int type, int length, string prefix, string suffix, bool replace, bool normal)
         {
             string[] codes = null;
-            if (length > 16)
+            if (!normal)
             {
                 switch (type)
                 {
@@ -54,7 +54,7 @@ namespace RedeemCodeGen
             string[] redeem = new string[count];
             for (int i = 0; i < count; i++)
             {
-                redeem[i] = codes[i].ToUpper();
+                redeem[i] = prefix + codes[i] + suffix;
             }
             return redeem;
         }

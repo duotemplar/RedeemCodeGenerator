@@ -56,25 +56,49 @@ namespace RedeemCodeGen
                 set;
             }
 
-            [Option('u', "upper", DefaultValue = true, HelpText = "是否转换成大写")]
+            [Option('u', "upper", HelpText = "是否转换成大写")]
             public bool UpperCase{get; set;}
 
-            [Option('r', "replace", DefaultValue = false, HelpText = "Replace 0 with special text")]
+            [Option('r', "replace", HelpText = "Replace 0 with special text")]
             public bool Replace{get; set;}
+
+            [Option('n', "normal", HelpText = "Replace 0 with special text")]
+            public bool Normal { get; set; }
+
         }
         static void Main(string[] args)
         {
+            var cfg =new IniConfig(".\\config.ini");
+            var content = cfg.GetStringValue("Char", "CharSet", "");
+            content = content.Replace(",", "");
+            RedeemCodeGen.sm_char_set = content.ToCharArray();
+
+            content = cfg.GetStringValue("Char", "MixCharSet", "");
+            content = content.Replace(",", "");
+            RedeemCodeGen.sm_mix_set = content.ToCharArray();
+
+            content = cfg.GetStringValue("Char", "ZeroReplacer", "");
+            content = content.Replace(",", "");
+            RedeemCodeGen.sm_replacer = content.ToCharArray();
+
             var result = CommandLine.Parser.Default.ParseArguments<Argument>(args);
 
             if(!result.Errors.Any())
             {
-                var codes = RedeemCodeGen.CreateCode(result.Value.count, result.Value.type, result.Value.length, result.Value.prefix, result.Value.suffix, result.Value.Replace);
+                var codes = RedeemCodeGen.CreateCode(result.Value.count, result.Value.type, result.Value.length, result.Value.prefix, result.Value.suffix, result.Value.Replace, result.Value.Normal);
 
-                var file = new FileStream(result.Value.path, FileMode.CreateNew);
+                var file = new FileStream(result.Value.path, FileMode.Create);
                 var stream = new StreamWriter(file);
                 for (int i = 0; i < codes.Length; i++)
                 {
-                    stream.WriteLine(codes[i]);
+                    if(result.Value.UpperCase)
+                    {
+                        stream.WriteLine(codes[i].ToUpper());
+                    }
+                    else
+                    {
+                        stream.WriteLine(codes[i].ToLower());
+                    }
                 }
                 stream.Close();
                 stream.Dispose();
