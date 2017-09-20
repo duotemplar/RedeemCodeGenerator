@@ -51,6 +51,8 @@ namespace RedeemCodeGen
 
             }
 
+            prefix = prefix ?? "";
+            suffix = suffix ?? "";
             string[] redeem = new string[count];
             for (int i = 0; i < count; i++)
             {

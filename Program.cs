@@ -62,7 +62,7 @@ namespace RedeemCodeGen
             [Option('r', "replace", HelpText = "Replace 0 with special text")]
             public bool Replace{get; set;}
 
-            [Option('n', "normal", HelpText = "Replace 0 with special text")]
+            [Option('n', "normal", HelpText = "if false will gen uni code and never repeat in the feature")]
             public bool Normal { get; set; }
 
         }
