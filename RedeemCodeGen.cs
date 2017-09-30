@@ -58,6 +58,16 @@ namespace RedeemCodeGen
             {
                 redeem[i] = prefix + codes[i] + suffix;
             }
+
+            string[] check = new string[count];
+            check.Concat(redeem);
+            for(int i = 0; i < check.Length; i++)
+            {
+                if(redeem.Where(r=>r == check[i]).Count() > 1)
+                {
+                    Console.WriteLine("Find duplicate redeem" + check[i]);
+                }
+            }
             return redeem;
         }
 
@@ -91,13 +101,34 @@ namespace RedeemCodeGen
 
             var seed = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0);
             var random = new Random((int)seed.TotalSeconds);
-            int[] bitTimes = new int[length];
-            int total_count = 1;
+
+            int min_idx_char_num = 1;
+            int max_count = 0;
+            while (min_idx_char_num <= sm_char_set.Length)
+            {
+                max_count = (int)Math.Pow(min_idx_char_num, length);
+                if (max_count > count)
+                {
+                    min_idx_char_num--;
+                    break;
+                }
+
+                min_idx_char_num++;
+            }
+
             int idx = 0;
+            int total_count = (int)Math.Pow(min_idx_char_num, length);
+
+            int[] bitTimes = new int[length];
+            for (int i = 0; i < length; i++)
+            {
+                bitTimes[i] = min_idx_char_num;
+            }
             while (idx < length)
             {
                 int f = random.Next(0, 10);
                 bitTimes[idx] = f;
+                total_count /= min_idx_char_num;
                 total_count *= f > 0 ? f : 1;
                 idx++;
                 if (total_count >= count)
@@ -124,7 +155,13 @@ namespace RedeemCodeGen
                 }
             }
 
-            var codes = new string[total_count];
+            var codes = new List<StringBuilder>();
+            for (int i = 0; i < total_count; i++)
+            {
+                codes.Add(new StringBuilder());
+            }
+            List<char[]> charlist = new List<char[]>();
+
             for (int i = 0; i < length; i++)
             {
                 int coloum = bitTimes[i];
@@ -148,17 +185,12 @@ namespace RedeemCodeGen
                     }
                 }
 
-                for (int j = 0; j < row; j++)
-                {
-                    for (int k = 0; k < coloum; k++)
-                    {
-                        var index = j * coloum + k;
-                        codes[index] = i == 0 ? num[k].ToString() : codes[index] + num[k];
-                    }
-                }
-            }
+                charlist.Add(num.Select(nr=>char.Parse(nr.ToString())).ToArray());
 
-            return codes;
+            }
+            GenCode(charlist, 0, codes);
+
+            return codes.Select(s => s.ToString()).ToArray();
         }
 
         private static string[] GenUniCharCode(int count, int length)
@@ -199,14 +231,34 @@ namespace RedeemCodeGen
 
             var seed = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0);
             var random = new Random((int)seed.TotalSeconds);
-            int[] bitTimes = new int[length];
-            int total_count = 1;
+
+            int min_idx_char_num = 1;
+            int max_count = 0;
+            while (min_idx_char_num <= sm_char_set.Length)
+            {
+                max_count = (int)Math.Pow(min_idx_char_num, length);
+                if(max_count > count)
+                {
+                    min_idx_char_num--;
+                    break;
+                }
+
+                min_idx_char_num++;
+            }
 
             int idx = 0;
+            int total_count = (int)Math.Pow(min_idx_char_num, length);
+            int[] bitTimes = new int[length];
+            for(int i = 0; i < length; i++)
+            {
+                bitTimes[i] = min_idx_char_num;
+            }
+
             while (idx < length)
             {
-                int f = random.Next(0, sm_char_set.Length);
+                int f = random.Next(min_idx_char_num, sm_char_set.Length);
                 bitTimes[idx] = f;
+                total_count /= min_idx_char_num;
                 total_count *= f > 0 ? f : 1;
                 idx++;
                 if (total_count >= count)
@@ -215,7 +267,12 @@ namespace RedeemCodeGen
                 }
             }
 
-            var codes = new string[total_count];
+            var codes = new List<StringBuilder>();
+            for(int i = 0; i < total_count; i++)
+            {
+                codes.Add(new StringBuilder());
+            }
+            List<char[]> charlist = new List<char[]>();
             for (int i = 0; i < length; i++)
             {
                 int coloum = bitTimes[i];
@@ -240,17 +297,36 @@ namespace RedeemCodeGen
                     }
                 }
 
-                for (int j = 0; j < row; j++)
-                {
-                    for (int k = 0; k < coloum; k++)
-                    {
-                        var index = j * coloum + k;
-                        codes[index] = i == 0 ? num[k].ToString() : codes[index] + num[k];
-                    }
-                }
+                charlist.Add(num);
             }
 
-            return codes;
+            GenCode(charlist, 0, codes);
+
+            return codes.Select(s=>s.ToString()).ToArray();
+        }
+
+        private static void GenCode(List<char[]> numlist, int index, List<StringBuilder> codes)
+        {
+            char[] char_array = numlist[index];
+            //计算得到区域段长度
+            var idx = codes.Count / char_array.Length;
+
+            for (int i = 0; i < char_array.Length; i++)
+            {
+                var list = new List<StringBuilder>();
+                for(int j = 0; j < idx; j++)
+                {
+                    codes[i * idx + j].Append(char_array[i]) ;
+                    //构建新的List
+                    list.Add(codes[i * idx + j]);
+                }
+
+                //递归
+                if(index < numlist.Count - 1)
+                {
+                    GenCode(numlist, index + 1, list);
+                }
+            }
         }
 
         private static string[] GenUniMixCode(int count, int length, bool replace)
@@ -292,14 +368,34 @@ namespace RedeemCodeGen
             }
             var seed = DateTime.Now - new DateTime(1970, 1, 1, 0, 0, 0);
             var random = new Random((int)seed.TotalSeconds);
-            int[] bitTimes = new int[length];
-            int total_count = 1;
+
+            int min_idx_char_num = 1;
+            int max_count = 0;
+            while (min_idx_char_num <= sm_char_set.Length)
+            {
+                max_count = (int)Math.Pow(min_idx_char_num, length);
+                if (max_count > count)
+                {
+                    min_idx_char_num--;
+                    break;
+                }
+
+                min_idx_char_num++;
+            }
 
             int idx = 0;
+            int total_count = (int)Math.Pow(min_idx_char_num, length);
+            int[] bitTimes = new int[length];
+            for (int i = 0; i < length; i++)
+            {
+                bitTimes[i] = min_idx_char_num;
+            }
+
             while (idx < length)
             {
                 int f = random.Next(0, sm_mix_set.Length);
                 bitTimes[idx] = f;
+                total_count /= min_idx_char_num;
                 total_count *= f > 0 ? f : 1;
                 idx++;
                 if (total_count >= count)
@@ -308,7 +404,13 @@ namespace RedeemCodeGen
                 }
             }
 
-            var codes = new string[total_count];
+            var codes = new List<StringBuilder>();
+            for (int i = 0; i < total_count; i++)
+            {
+                codes.Add(new StringBuilder());
+            }
+            List<char[]> charlist = new List<char[]>();
+
             for (int i = 0; i < length; i++)
             {
                 int coloum = bitTimes[i];
@@ -333,17 +435,21 @@ namespace RedeemCodeGen
                     }
                 }
 
-                for (int j = 0; j < row; j++)
-                {
-                    for (int k = 0; k < coloum; k++)
-                    {
-                        var index = j * coloum + k;
-                        codes[index] = i == 0 ? num[k].ToString() : codes[index] + num[k];
-                    }
-                }
+                //for (int j = 0; j < row; j++)
+                //{
+                //    for (int k = 0; k < coloum; k++)
+                //    {
+                //        var index = j * coloum + k;
+                //        codes[index] = i == 0 ? num[k].ToString() : codes[index] + num[k];
+                //    }
+                //}
+                charlist.Add(num);
+
             }
 
-            return codes;
+            GenCode(charlist, 0, codes);
+
+            return codes.Select(s => s.ToString()).ToArray();
         }
     }
 }
