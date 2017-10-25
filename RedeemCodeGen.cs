@@ -104,7 +104,7 @@ namespace RedeemCodeGen
 
             int min_idx_char_num = 1;
             int max_count = 0;
-            while (min_idx_char_num <= sm_char_set.Length)
+            while (min_idx_char_num <= 10)
             {
                 max_count = (int)Math.Pow(min_idx_char_num, length);
                 if (max_count > count)
@@ -188,7 +188,7 @@ namespace RedeemCodeGen
                 charlist.Add(num.Select(nr=>char.Parse(nr.ToString())).ToArray());
 
             }
-            GenCode(charlist, 0, codes);
+            GenCode(charlist, 0, codes, random, new char[] {'0','1','2','3','4','5','6','7','8','9'});
 
             return codes.Select(s => s.ToString()).ToArray();
         }
@@ -300,23 +300,32 @@ namespace RedeemCodeGen
                 charlist.Add(num);
             }
 
-            GenCode(charlist, 0, codes);
+            GenCode(charlist, 0, codes, random, sm_char_set);
 
             return codes.Select(s=>s.ToString()).ToArray();
         }
 
-        private static void GenCode(List<char[]> numlist, int index, List<StringBuilder> codes)
+        private static void GenCode(List<char[]> numlist, int index, List<StringBuilder> codes, Random random, char[] dummy)
         {
             char[] char_array = numlist[index];
             //计算得到区域段长度
             var idx = codes.Count / char_array.Length;
+
 
             for (int i = 0; i < char_array.Length; i++)
             {
                 var list = new List<StringBuilder>();
                 for(int j = 0; j < idx; j++)
                 {
-                    codes[i * idx + j].Append(char_array[i]) ;
+                    if(char_array.Length == 1 && index != 0)
+                    {
+                        var x = random.Next(0, dummy.Length);
+                        codes[i * idx + j].Append(dummy[x]);
+                    }
+                    else
+                    {
+                        codes[i * idx + j].Append(char_array[i]);
+                    }
                     //构建新的List
                     list.Add(codes[i * idx + j]);
                 }
@@ -324,7 +333,7 @@ namespace RedeemCodeGen
                 //递归
                 if(index < numlist.Count - 1)
                 {
-                    GenCode(numlist, index + 1, list);
+                    GenCode(numlist, index + 1, list, random, dummy);
                 }
             }
         }
@@ -371,7 +380,7 @@ namespace RedeemCodeGen
 
             int min_idx_char_num = 1;
             int max_count = 0;
-            while (min_idx_char_num <= sm_char_set.Length)
+            while (min_idx_char_num <= sm_mix_set.Length)
             {
                 max_count = (int)Math.Pow(min_idx_char_num, length);
                 if (max_count > count)
@@ -447,7 +456,7 @@ namespace RedeemCodeGen
 
             }
 
-            GenCode(charlist, 0, codes);
+            GenCode(charlist, 0, codes, random, sm_mix_set);
 
             return codes.Select(s => s.ToString()).ToArray();
         }
